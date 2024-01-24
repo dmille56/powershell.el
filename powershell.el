@@ -795,9 +795,9 @@ that value is non-nil."
   (powershell-setup-font-lock)
   (setq-local indent-line-function 'powershell-indent-line)
   (setq-local compile-command powershell-compile-command)
-  (setq-local comment-start "#")
-  (setq-local comment-start-skip "#+\\s*")
-  (setq-local parse-sexp-ignore-comments t)
+  ;; (setq-local comment-start "#")
+  ;; (setq-local comment-start-skip "#+\\s*")
+  ;; (setq-local parse-sexp-ignore-comments t)
   ;; Support electric-pair-mode
   (setq-local electric-indent-chars
               (append "{}():;," electric-indent-chars))
