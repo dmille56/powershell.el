@@ -501,8 +501,7 @@ Returns match 3 and match 4 for @\" \"@ sequences respectively."
                             (1- (match-end 0)) (match-end 0)))))
     t))
 (defvar powershell-font-lock-syntactic-keywords
-  `((powershell-find-syntactic-comments (1 "!" t t) (2 "!" t t)
-                                        (3 "<" t t) (4 ">" t t))
+  `(
     (powershell-find-syntactic-quotes (1 "|" t t) (2 "|" t t)
                                       (3 "|" t t) (4 "|" t t)))
   "A list of regexp's or functions.
@@ -598,9 +597,31 @@ characters that can't be set by the `syntax-table' alone.")
     (modify-syntax-entry ?*  "." powershell-mode-syntax-table)
     (modify-syntax-entry ?/  "." powershell-mode-syntax-table)
     (modify-syntax-entry ?' "\"" powershell-mode-syntax-table)
-    (modify-syntax-entry ?#  "<" powershell-mode-syntax-table)
+    (modify-syntax-entry ?# "< b" powershell-mode-syntax-table)
+    (modify-syntax-entry ?\n "> b" powershell-mode-syntax-table)
     powershell-mode-syntax-table)
   "Syntax for PowerShell major mode.")
+
+(defun powershell-mode-syntax-propertize-function (start end)
+  "Wrapper function to apply syntax properties for comments and strings.
+Go from START to END."
+  (powershell-mode-syntax-propertize-comments start end)
+  )
+
+;; Function to apply syntax properties for multi-line comments
+;; :TODO: fix to make the trailing > also have the correct syntax highlighting
+(defun powershell-mode-syntax-propertize-comments (start end)
+  "Apply syntax properties for multi-line comments from START to END."
+  (goto-char start)
+  (while (re-search-forward "<#\\|\\#>" end t)
+    (let ((match (match-string 0)))
+      (put-text-property (match-beginning 0) (match-end 0)
+                         'syntax-table
+                         (if (equal match "<#")
+                             '(11 . nil)  ;; Comment start
+                             '(12 . nil)) ;; Comment end
+                         )
+      )))
 
 (defvar powershell-mode-map
   (let ((powershell-mode-map (make-keymap)))
@@ -769,6 +790,8 @@ Where <fcn-name> is the name of the function to which <helper string> applies.
 \\{powershell-mode-map}
 Entry to this mode calls the value of `powershell-mode-hook' if
 that value is non-nil."
+  (set (make-local-variable 'syntax-propertize-function)
+       'powershell-mode-syntax-propertize-function)
   (powershell-setup-font-lock)
   (setq-local indent-line-function 'powershell-indent-line)
   (setq-local compile-command powershell-compile-command)
